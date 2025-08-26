@@ -53,7 +53,9 @@ INSTALLED_APPS = [
 
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': (
-        'rest_framework_simplejwt.authentication.JWTAuthentication',
+        'rest_framework.authentication.SessionAuthentication',   # allows browser login
+        'rest_framework.authentication.BasicAuthentication',     # optional
+        'rest_framework_simplejwt.authentication.JWTAuthentication',  # still keep JWT
     ),
     'DEFAULT_PERMISSION_CLASSES': (
         'rest_framework.permissions.IsAuthenticated',
