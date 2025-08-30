@@ -5,10 +5,16 @@ from django.dispatch import receiver
 
 
 class Profile(models.Model):
+    ROLE_CHOICES = (
+        ("ADMIN", "Admin"),
+        ("MEMBER", "Member"),
+    )
+
     user = models.OneToOneField(User, on_delete=models.CASCADE)
+    role = models.CharField(max_length=10, choices=ROLE_CHOICES, default="MEMBER")
+
     bio = models.TextField(blank=True, null=True)
     location = models.CharField(max_length=255, blank=True, null=True)
-
     graduation_year = models.IntegerField(blank=True, null=True)
     profession = models.CharField(max_length=255, blank=True, null=True)
     skills = models.TextField(blank=True, null=True)
@@ -17,12 +23,10 @@ class Profile(models.Model):
 
     show_email = models.BooleanField(default=False)
     show_phone = models.BooleanField(default=False)
-
-    # 👇 New avatar field
     avatar = models.ImageField(upload_to="avatars/", blank=True, null=True)
 
     def __str__(self):
-        return self.user.username
+        return f"{self.user.username} ({self.role})"
 
 # --- Signals ---
 @receiver(post_save, sender=User)
