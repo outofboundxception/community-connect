@@ -1,4 +1,4 @@
-# Community Connect (Backend)
+# Community Connect 
 
 ## 🛠️ Setup Instructions
 
