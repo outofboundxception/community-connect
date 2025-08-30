@@ -18,6 +18,7 @@ from django.contrib import admin
 from django.urls import path, include
 
 urlpatterns = [
-    path('api-auth/', include('rest_framework.urls')),  # adds login/logout to browsable API
-    path('api/users/', include('users.urls')),          # your existing API routes
+    path('admin/', admin.site.urls),      # ✅ This enables the Django Admin
+    path('api/users/', include('users.urls')),
+    path('api-auth/', include('rest_framework.urls')),
 ]

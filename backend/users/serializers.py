@@ -5,35 +5,43 @@ from .models import Profile
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
-        fields = ['id', 'username', 'email']
-
-class RegisterSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = User
-        fields = ['id', 'username', 'email', 'password']
-        extra_kwargs = {'password': {'write_only': True}}
-    def create(self, validated_data):
-        return User.objects.create_user(**validated_data)
+        fields = ["id", "username", "email"]
 
 class ProfileSerializer(serializers.ModelSerializer):
-    user = UserSerializer(read_only=True)
-    avatar_url = serializers.SerializerMethodField()
+    user = UserSerializer(read_only=True)  # Nested user info
 
     class Meta:
         model = Profile
-        fields = ['id','user','graduation_year','profession','skills','city',
-                  'contact','show_email','show_phone','avatar','avatar_url']
-        read_only_fields = ['avatar_url']
+        fields = [
+            "id",
+            "user",
+            "role",
+            "bio",
+            "location",
+            "graduation_year",
+            "profession",
+            "skills",
+            "city",
+            "contact",
+            "show_email",
+            "show_phone",
+            "avatar",
+        ]
 
-    def get_avatar_url(self, obj):
-        request = self.context.get('request')
-        if obj.avatar and request:
-            return request.build_absolute_uri(obj.avatar.url)
-        return None
+class RegisterSerializer(serializers.ModelSerializer):
+    # password write-only so it won't show up in response
+    password = serializers.CharField(write_only=True)
 
-# NEW: for updates (don’t allow changing user via API)
-class ProfileUpdateSerializer(serializers.ModelSerializer):
     class Meta:
-        model = Profile
-        fields = ['graduation_year','profession','skills','city',
-                  'contact','show_email','show_phone','avatar']
+        model = User
+        fields = ["id", "username", "email", "password"]
+
+    def create(self, validated_data):
+        user = User.objects.create_user(
+            username=validated_data["username"],
+            email=validated_data["email"],
+            password=validated_data["password"]
+        )
+        # When a user registers, create a Profile with role = MEMBER by default
+        Profile.objects.create(user=user, role="MEMBER")
+        return user
