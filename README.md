@@ -42,9 +42,14 @@ python manage.py runserver
 #### Now all of the following will be accessible
 
 Register → http://127.0.0.1:8000/api/users/api/users/register/
+
 Login (JWT) → http://127.0.0.1:8000/api/users/api/users/token/
+
 Refresh Token → http://127.0.0.1:8000/api/users/api/users/token/refresh/
+
 Logout (requires Refresh Token) → http://127.0.0.1:8000/api/users/api/users/logout/
+
 Profile View / Update → http://127.0.0.1:8000/api/users/api/users/profile/ (http://127.0.0.1:8000/api/users/api/users/profile/update/)
+
 Directory (only accessible by admin) → http://127.0.0.1:8000/api/users/api/users/directory/
 
