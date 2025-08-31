@@ -13,24 +13,21 @@ After opening the the repo in VS code open a new terminal and run the following
 #### Windows
 
 Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass
+
 venv\Scripts\activate
-cd backend
-pip install django djangorestframework djangorestframework-simplejwt
-pip install django-filter
-pip install Pillow
-python manage.py makemigrations
-python manage.py migrate
-python manage.py createsuperuser
 
-#### Mac
-
-source venv/bin/activate
 cd backend
+
 pip install django djangorestframework djangorestframework-simplejwt
+
 pip install django-filter
+
 pip install Pillow
+
 python manage.py makemigrations
+
 python manage.py migrate
+
 python manage.py createsuperuser
 
 *Enter Username and password for the Super User*
