@@ -1,35 +1,34 @@
-from rest_framework import generics, permissions
+from rest_framework import generics, permissions, status
 from rest_framework.response import Response
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.views import APIView
 from django.contrib.auth.models import User
+from rest_framework_simplejwt.tokens import RefreshToken
 
 from .models import Profile
 from .serializers import RegisterSerializer, UserSerializer, ProfileSerializer
 
 
-# --------------------------
-# Register API
-# --------------------------
 class RegisterAPI(generics.CreateAPIView):
     queryset = User.objects.all()
     serializer_class = RegisterSerializer
-    permission_classes = [permissions.AllowAny]  # anyone can register
+    permission_classes = [permissions.AllowAny]
+
+    def create(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        user = serializer.save()
+        
+        # Generate tokens for the new user
+        refresh = RefreshToken.for_user(user)
+        
+        return Response({
+            'user': UserSerializer(user).data,
+            'refresh': str(refresh),
+            'access': str(refresh.access_token),
+        }, status=status.HTTP_201_CREATED)
 
 
-# --------------------------
-# Get Current User
-# --------------------------
-@api_view(["GET"])
-@permission_classes([permissions.IsAuthenticated])
-def get_user(request):
-    serializer = UserSerializer(request.user)
-    return Response(serializer.data)
-
-
-# --------------------------
-# Profile View (GET current user profile)
-# --------------------------
 class ProfileAPI(APIView):
     permission_classes = [permissions.IsAuthenticated]
 
@@ -39,9 +38,6 @@ class ProfileAPI(APIView):
         return Response(serializer.data)
 
 
-# --------------------------
-# Profile Update View
-# --------------------------
 class ProfileUpdateAPI(APIView):
     permission_classes = [permissions.IsAuthenticated]
 
@@ -50,41 +46,21 @@ class ProfileUpdateAPI(APIView):
         data = request.data.copy()
         if "role" in data:
             data.pop("role")
-        serializer = ProfileSerializer(profile, data=request.data, partial=True)
+        serializer = ProfileSerializer(profile, data=data, partial=True)
         if serializer.is_valid():
             serializer.save()
             return Response(serializer.data)
         return Response(serializer.errors, status=400)
 
 
-# --------------------------
-# Directory API (ADMIN-only)
-# --------------------------
-class DirectoryAPI(APIView):
-    permission_classes = [permissions.IsAuthenticated]
-
-    def get(self, request):
-        # Only ADMINs can view the directory
-        if request.user.profile.role != "ADMIN":
-            return Response({"error": "Only Admins can access this"}, status=403)
-
-        profiles = Profile.objects.all()
-        serializer = ProfileSerializer(profiles, many=True)
-        return Response(serializer.data)
-
-
-# --------------------------
-# Logout View
-# --------------------------
-from rest_framework_simplejwt.tokens import RefreshToken
-
 @api_view(["POST"])
 @permission_classes([permissions.IsAuthenticated])
 def logout_view(request):
     try:
-        refresh_token = request.data["refresh"]
-        token = RefreshToken(refresh_token)
-        token.blacklist()
+        refresh_token = request.data.get("refresh")
+        if refresh_token:
+            token = RefreshToken(refresh_token)
+            token.blacklist()
         return Response({"message": "Logged out successfully"})
     except Exception as e:
         return Response({"error": "Invalid token"}, status=400)
