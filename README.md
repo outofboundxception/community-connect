@@ -1,16 +1,31 @@
-# gitraj
+# Community Connect App
 
-A new Flutter project.
+**Community Connect** is a Flutter mobile application designed to **connect members of a community**, allowing them to explore profiles, share interests, and build meaningful connections. The app features **interactive UI, smooth animations, and easy navigation**.
 
+---
+
+## Features
+
+
+- **Interactive UI & Animations**
+    - Smooth fade, slide, and scale animations for profile cards and buttons.
+    - Decorative and responsive UI elements for an engaging experience.
+
+- **Reusable Components**
+    - Buttons, cards, chips, and sections designed as reusable Flutter widgets.
+
+    
 ## Getting Started
 
-This project is a starting point for a Flutter application.
+### Prerequisites
 
-A few resources to get you started if this is your first Flutter project:
+- Flutter SDK (>=3.0.0 recommended)
+- Android Studio or VS Code
+- Android/iOS device or emulator
 
-- [Lab: Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Cookbook: Useful Flutter samples](https://docs.flutter.dev/cookbook)
+### Installation
 
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+1. Clone the repository:
+```bash
+git clone <repository-url>
+cd community_connect
