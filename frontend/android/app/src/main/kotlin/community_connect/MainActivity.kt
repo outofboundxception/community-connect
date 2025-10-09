@@ -1,4 +1,4 @@
-package com.example.gitraj
+package community_connect
 
 import io.flutter.embedding.android.FlutterActivity
 

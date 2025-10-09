@@ -1,6 +1,6 @@
 {
-    "name": "gitraj",
-    "short_name": "gitraj",
+    "name": "community-connect",
+    "short_name": "community-connect",
     "start_url": ".",
     "display": "standalone",
     "background_color": "#0175C2",
