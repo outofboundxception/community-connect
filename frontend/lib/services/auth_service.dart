@@ -1,24 +1,25 @@
 // lib/services/auth_service.dart
+import 'package:firebase_auth/firebase_auth.dart' as firebase;
 import 'package:flutter/foundation.dart';
 import '../models/user_model.dart';
+import 'database_service.dart';
 
-// Abstract class defining the contract for any authentication service
 abstract class IAuthService with ChangeNotifier {
   User? get currentUser;
   bool get isAuthenticated;
   Future<void> login(String email, String password);
-  Future<void> signUp(
-    String fullName,
-    String email,
-    String password,
-    List<String> interests,
-  );
+  Future<void> signUp(String fullName, String email, String password, List<String> interests);
   Future<void> logout();
 }
 
-// Concrete implementation of the authentication service
 class AuthService extends IAuthService {
+  final firebase.FirebaseAuth _auth = firebase.FirebaseAuth.instance;
+  final DatabaseService _db = DatabaseService();
   User? _currentUser;
+
+  AuthService() {
+    _auth.authStateChanges().listen(_onAuthStateChanged);
+  }
 
   @override
   User? get currentUser => _currentUser;
@@ -26,46 +27,44 @@ class AuthService extends IAuthService {
   @override
   bool get isAuthenticated => _currentUser != null;
 
-  @override
-  Future<void> login(String email, String password) async {
-    // TODO: Implement actual login logic with a backend (e.g., Firebase)
-    print("Attempting login with $email");
-    await Future.delayed(const Duration(seconds: 1));
-    // Mock user for demonstration
-    _currentUser = User(
-      uid: "123",
-      fullName: "Alex Thompson",
-      email: email,
-      isAdmin: true,
-    );
-    notifyListeners(); // Notify listeners about the change
+  Future<void> _onAuthStateChanged(firebase.User? firebaseUser) async {
+    if (firebaseUser == null) {
+      _currentUser = null;
+    } else {
+      _currentUser = await _db.getUserData(firebaseUser.uid);
+    }
+    notifyListeners();
   }
 
   @override
-  Future<void> signUp(
-    String fullName,
-    String email,
-    String password,
-    List<String> interests,
-  ) async {
-    // TODO: Implement actual sign-up logic
-    print("Signing up $fullName");
-    await Future.delayed(const Duration(seconds: 1));
-    _currentUser = User(
-      uid: "123",
-      fullName: fullName,
-      email: email,
-      interests: interests,
-    );
-    notifyListeners();
+  Future<void> login(String email, String password) async {
+    try {
+      await _auth.signInWithEmailAndPassword(email: email, password: password);
+    } catch (e) {
+      rethrow;
+    }
+  }
+
+  @override
+  Future<void> signUp(String fullName, String email, String password, List<String> interests) async {
+    try {
+      final credential = await _auth.createUserWithEmailAndPassword(email: email, password: password);
+      if (credential.user != null) {
+        User newUser = User(
+          uid: credential.user!.uid,
+          fullName: fullName,
+          email: email,
+          interests: interests,
+        );
+        await _db.setUserData(newUser);
+      }
+    } catch (e) {
+      rethrow;
+    }
   }
 
   @override
   Future<void> logout() async {
-    // TODO: Implement actual logout logic
-    print("Logging out");
-    await Future.delayed(const Duration(seconds: 1));
-    _currentUser = null;
-    notifyListeners();
+    await _auth.signOut();
   }
 }

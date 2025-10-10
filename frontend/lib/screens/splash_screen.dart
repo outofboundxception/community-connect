@@ -1,8 +1,5 @@
 // lib/screens/splash_screen.dart
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
-import '../services/auth_service.dart';
-import 'dashboard/main_navigator.dart';
 import 'login_screen.dart';
 
 class SplashScreen extends StatefulWidget {
@@ -16,27 +13,19 @@ class _SplashScreenState extends State<SplashScreen> {
   @override
   void initState() {
     super.initState();
-    _checkAuthStatus();
+    _navigateToLogin();
   }
 
-  Future<void> _checkAuthStatus() async {
-    // Wait for 2 seconds to show splash
+  Future<void> _navigateToLogin() async {
+    // Wait for 2 seconds to show splash, then go to the auth gate
     await Future.delayed(const Duration(seconds: 2));
 
-    // Check if user is authenticated
-    final authService = Provider.of<AuthService>(context, listen: false);
-
     if (mounted) {
-      // Check if the widget is still in the tree
-      if (authService.isAuthenticated) {
-        Navigator.of(context).pushReplacement(
-          MaterialPageRoute(builder: (_) => const MainNavigator()),
-        );
-      } else {
-        Navigator.of(context).pushReplacement(
-          MaterialPageRoute(builder: (_) => const LoginScreen()),
-        );
-      }
+      // The logic in main.dart will decide whether to show LoginScreen or MainNavigator
+      // This pushReplacement is a fallback in case the app starts here directly.
+       Navigator.of(context).pushReplacement(
+        MaterialPageRoute(builder: (_) => const LoginScreen()),
+      );
     }
   }
 

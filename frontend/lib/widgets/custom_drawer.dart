@@ -2,14 +2,13 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../services/auth_service.dart';
-import '../screens/login_screen.dart';
 
 class CustomDrawer extends StatelessWidget {
   const CustomDrawer({super.key});
 
   @override
   Widget build(BuildContext context) {
-    final authService = Provider.of<AuthService>(context);
+    final authService = Provider.of<IAuthService>(context); // Use the interface
     final user = authService.currentUser;
 
     return Drawer(
@@ -19,38 +18,30 @@ class CustomDrawer extends StatelessWidget {
           UserAccountsDrawerHeader(
             accountName: Text(user?.fullName ?? "Guest User"),
             accountEmail: Text(user?.email ?? ""),
-            currentAccountPicture: const CircleAvatar(
-              child: Icon(Icons.person),
+            currentAccountPicture: CircleAvatar(
+              backgroundImage: user?.profilePictureUrl != null && user!.profilePictureUrl.isNotEmpty
+                  ? NetworkImage(user.profilePictureUrl)
+                  : null,
+              child: user?.profilePictureUrl == null || user!.profilePictureUrl.isEmpty
+                  ? const Icon(Icons.person)
+                  : null,
             ),
           ),
           ListTile(
             leading: const Icon(Icons.dashboard),
             title: const Text('Dashboard'),
             onTap: () {
-              // Usually you navigate, but since we are on dashboard, just close.
               Navigator.pop(context);
             },
           ),
-          ListTile(
-            leading: const Icon(Icons.event),
-            title: const Text('Events'),
-            onTap: () {
-              // TODO: This should navigate to the events screen, but since we are using
-              // bottom navigation, this functionality might be redundant or could be
-              // handled by a central navigation service. For now, it just closes.
-              Navigator.pop(context);
-            },
-          ),
+          // Add other navigation items as needed
           const Divider(),
           ListTile(
             leading: const Icon(Icons.logout),
             title: const Text('Logout'),
             onTap: () {
               authService.logout();
-              Navigator.of(context).pushAndRemoveUntil(
-                MaterialPageRoute(builder: (_) => const LoginScreen()),
-                (route) => false,
-              );
+              Navigator.pop(context); // Close the drawer
             },
           ),
         ],

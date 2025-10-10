@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
-import '../../models/user_model.dart';
-import 'dart:math' as math;
+import '../../models/user_model.dart'; 
 
 class MemberProfileScreen extends StatefulWidget {
   final User user;
