@@ -1,8 +1,5 @@
 // lib/screens/profile/edit_profile_screen.dart
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
-import '../../services/auth_service.dart';
-import '../../services/database_service.dart';
 
 class EditProfileScreen extends StatefulWidget {
   const EditProfileScreen({super.key});
@@ -14,32 +11,23 @@ class EditProfileScreen extends StatefulWidget {
 class _EditProfileScreenState extends State<EditProfileScreen> {
   final _nameController = TextEditingController();
   final _bioController = TextEditingController();
-  final DatabaseService _dbService = DatabaseService();
-  late String _uid;
 
   @override
   void initState() {
     super.initState();
-    final user = Provider.of<IAuthService>(context, listen: false).currentUser;
-    if (user != null) {
-      _uid = user.uid;
-      _nameController.text = user.fullName;
-      _bioController.text = user.bio;
-    }
+    // TODO: In a real app, load the current user's data into the controllers
+    // For example:
+    // final user = Provider.of<AuthService>(context, listen: false).currentUser;
+    // _nameController.text = user?.fullName ?? '';
+    // _bioController.text = user?.bio ?? '';
   }
 
-  Future<void> _saveProfile() async {
-    // THIS CALL IS THE FIX
-    await _dbService.updateUserProfile(
-        _uid, _nameController.text, _bioController.text);
-
-    if (mounted) {
-       // Manually trigger a refresh of user data after saving
-      await Provider.of<IAuthService>(context, listen: false).logout();
-      await Provider.of<IAuthService>(context, listen: false).login("test@example.com","password123");
-      
-      Navigator.of(context).pop();
-    }
+  void _saveProfile() {
+    // TODO: Implement logic to save the updated profile information to your backend
+    print("Saving profile...");
+    print("Name: ${_nameController.text}");
+    print("Bio: ${_bioController.text}");
+    Navigator.of(context).pop(); // Go back to the profile screen
   }
 
   @override
@@ -55,6 +43,33 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
         padding: const EdgeInsets.all(16.0),
         child: Column(
           children: [
+            // Profile picture editing UI
+            Stack(
+              children: [
+                const CircleAvatar(
+                  radius: 50,
+                  child: Icon(Icons.person, size: 50),
+                ),
+                Positioned(
+                  bottom: 0,
+                  right: 0,
+                  child: CircleAvatar(
+                    radius: 18,
+                    backgroundColor: Theme.of(context).primaryColor,
+                    child: IconButton(
+                      icon: const Icon(
+                        Icons.camera_alt,
+                        color: Colors.white,
+                        size: 20,
+                      ),
+                      onPressed: () {
+                        /* TODO: Implement image picking logic */
+                      },
+                    ),
+                  ),
+                ),
+              ],
+            ),
             const SizedBox(height: 24),
             TextFormField(
               controller: _nameController,
