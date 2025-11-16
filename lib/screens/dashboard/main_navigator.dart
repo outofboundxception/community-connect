@@ -1,10 +1,18 @@
 // lib/screens/dashboard/main_navigator.dart
 import 'package:flutter/material.dart';
+import 'package:gitraj/screens/chat/inbox_screen.dart';
+import 'package:provider/provider.dart';
+
+import '/services/auth_service.dart';
+import '../login_screen.dart';
+
 import '../chat/group_chat_screen.dart';
 import '../events/events_screen.dart';
 import '../members/members_directory_screen.dart';
 import '../profile/profile_screen.dart';
+
 import 'dashboard_screen.dart';
+import 'admin_dashboard_screen.dart';
 
 class MainNavigator extends StatefulWidget {
   const MainNavigator({super.key});
@@ -13,21 +21,28 @@ class MainNavigator extends StatefulWidget {
   State<MainNavigator> createState() => _MainNavigatorState();
 }
 
-class _MainNavigatorState extends State<MainNavigator> with SingleTickerProviderStateMixin {
+class _MainNavigatorState extends State<MainNavigator>
+    with SingleTickerProviderStateMixin {
   int _currentIndex = 0;
   late AnimationController _animationController;
-
-  final List<Widget> _screens = [
-    const DashboardScreen(),
-    const EventsScreen(),
-    const MembersDirectoryScreen(),
-    const GroupChatScreen(),
-    const ProfileScreen(),
-  ];
+  late List<Widget> _screens;
 
   @override
   void initState() {
     super.initState();
+
+    final authService = Provider.of<AuthService>(context, listen: false);
+    final bool isAdmin = authService.currentUser?.isAdmin ?? false;
+
+    // HOME SCREEN DEPENDS ON USER TYPE
+    _screens = [
+      isAdmin ? const AdminDashboardScreen() : const DashboardScreen(),
+      const EventsScreen(),
+      const MembersDirectoryScreen(),
+      const InboxScreen(),
+      const ProfileScreen(),
+    ];
+
     _animationController = AnimationController(
       duration: const Duration(milliseconds: 200),
       vsync: this,
@@ -47,13 +62,26 @@ class _MainNavigatorState extends State<MainNavigator> with SingleTickerProvider
     }
   }
 
+  // 🔥 LOGOUT FUNCTION — MAIN FIX
+  void _logout() async {
+    final auth = Provider.of<AuthService>(context, listen: false);
+    await auth.logout();
+
+    if (context.mounted) {
+      Navigator.pushAndRemoveUntil(
+        context,
+        MaterialPageRoute(builder: (_) => const LoginScreen()),
+        (route) => false,
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: IndexedStack(
-        index: _currentIndex,
-        children: _screens,
-      ),
+      body: IndexedStack(index: _currentIndex, children: _screens),
+
+      // BOTTOM NAV + LOGOUT
       bottomNavigationBar: Container(
         decoration: BoxDecoration(
           boxShadow: [
@@ -94,15 +122,7 @@ class _MainNavigatorState extends State<MainNavigator> with SingleTickerProvider
               elevation: 0,
               selectedItemColor: const Color(0xFFFF8C42),
               unselectedItemColor: const Color(0xFFBCAAA4),
-              selectedFontSize: 12,
-              unselectedFontSize: 11,
-              selectedLabelStyle: const TextStyle(
-                fontWeight: FontWeight.w700,
-                letterSpacing: 0.3,
-              ),
-              unselectedLabelStyle: const TextStyle(
-                fontWeight: FontWeight.w500,
-              ),
+
               items: [
                 _buildNavItem(
                   icon: Icons.home_rounded,
@@ -124,10 +144,18 @@ class _MainNavigatorState extends State<MainNavigator> with SingleTickerProvider
                   label: 'Chat',
                   index: 3,
                 ),
-                _buildNavItem(
-                  icon: Icons.person_rounded,
-                  label: 'Profile',
-                  index: 4,
+
+                // 🔥 LOGOUT TAB
+                BottomNavigationBarItem(
+                  icon: GestureDetector(
+                    onTap: _logout,
+                    child: const Icon(
+                      Icons.logout_rounded,
+                      color: Colors.redAccent,
+                      size: 28,
+                    ),
+                  ),
+                  label: 'Logout',
                 ),
               ],
             ),
@@ -151,22 +179,10 @@ class _MainNavigatorState extends State<MainNavigator> with SingleTickerProvider
         decoration: BoxDecoration(
           gradient: isSelected
               ? const LinearGradient(
-            colors: [
-              Color(0xFFFFC966),
-              Color(0xFFFFB347),
-            ],
-          )
+                  colors: [Color(0xFFFFC966), Color(0xFFFFB347)],
+                )
               : null,
           borderRadius: BorderRadius.circular(12),
-          boxShadow: isSelected
-              ? [
-            BoxShadow(
-              color: const Color(0xFFFFB347).withOpacity(0.3),
-              blurRadius: 8,
-              offset: const Offset(0, 3),
-            ),
-          ]
-              : null,
         ),
         child: Icon(
           icon,

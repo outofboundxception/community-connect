@@ -13,7 +13,8 @@ class DashboardScreen extends StatefulWidget {
   State<DashboardScreen> createState() => _DashboardScreenState();
 }
 
-class _DashboardScreenState extends State<DashboardScreen> with TickerProviderStateMixin {
+class _DashboardScreenState extends State<DashboardScreen>
+    with TickerProviderStateMixin {
   late AnimationController _fadeController;
   late AnimationController _slideController;
   late Animation<double> _fadeAnimation;
@@ -38,13 +39,10 @@ class _DashboardScreenState extends State<DashboardScreen> with TickerProviderSt
       curve: Curves.easeOut,
     );
 
-    _slideAnimation = Tween<Offset>(
-      begin: const Offset(0, 0.3),
-      end: Offset.zero,
-    ).animate(CurvedAnimation(
-      parent: _slideController,
-      curve: Curves.easeOutCubic,
-    ));
+    _slideAnimation =
+        Tween<Offset>(begin: const Offset(0, 0.3), end: Offset.zero).animate(
+          CurvedAnimation(parent: _slideController, curve: Curves.easeOutCubic),
+        );
 
     _fadeController.forward();
     _slideController.forward();
@@ -180,7 +178,12 @@ class _DashboardScreenState extends State<DashboardScreen> with TickerProviderSt
                               ),
                               // Content
                               Padding(
-                                padding: const EdgeInsets.fromLTRB(20, 60, 20, 20),
+                                padding: const EdgeInsets.fromLTRB(
+                                  20,
+                                  60,
+                                  20,
+                                  20,
+                                ),
                                 child: Column(
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   mainAxisAlignment: MainAxisAlignment.end,
@@ -196,14 +199,19 @@ class _DashboardScreenState extends State<DashboardScreen> with TickerProviderSt
                                                 Color(0xFFFF8C42),
                                               ],
                                             ),
-                                            borderRadius: BorderRadius.circular(16),
+                                            borderRadius: BorderRadius.circular(
+                                              16,
+                                            ),
                                             border: Border.all(
-                                              color: Colors.white.withOpacity(0.4),
+                                              color: Colors.white.withOpacity(
+                                                0.4,
+                                              ),
                                               width: 2,
                                             ),
                                             boxShadow: [
                                               BoxShadow(
-                                                color: Colors.orange.withOpacity(0.3),
+                                                color: Colors.orange
+                                                    .withOpacity(0.3),
                                                 blurRadius: 12,
                                                 offset: const Offset(0, 4),
                                               ),
@@ -218,12 +226,15 @@ class _DashboardScreenState extends State<DashboardScreen> with TickerProviderSt
                                         const SizedBox(width: 16),
                                         Expanded(
                                           child: Column(
-                                            crossAxisAlignment: CrossAxisAlignment.start,
+                                            crossAxisAlignment:
+                                                CrossAxisAlignment.start,
                                             children: [
                                               Text(
                                                 "Welcome Back! 👋",
                                                 style: TextStyle(
-                                                  color: const Color(0xFF5D4037).withOpacity(0.8),
+                                                  color: const Color(
+                                                    0xFF5D4037,
+                                                  ).withOpacity(0.8),
                                                   fontSize: 16,
                                                   fontWeight: FontWeight.w600,
                                                 ),
@@ -244,10 +255,14 @@ class _DashboardScreenState extends State<DashboardScreen> with TickerProviderSt
                                         Container(
                                           padding: const EdgeInsets.all(10),
                                           decoration: BoxDecoration(
-                                            color: Colors.white.withOpacity(0.25),
+                                            color: Colors.white.withOpacity(
+                                              0.25,
+                                            ),
                                             shape: BoxShape.circle,
                                             border: Border.all(
-                                              color: Colors.white.withOpacity(0.4),
+                                              color: Colors.white.withOpacity(
+                                                0.4,
+                                              ),
                                               width: 2,
                                             ),
                                           ),
@@ -285,7 +300,10 @@ class _DashboardScreenState extends State<DashboardScreen> with TickerProviderSt
                                       value: "12",
                                       subtitle: "This month",
                                       gradient: const LinearGradient(
-                                        colors: [Color(0xFFFFC966), Color(0xFFFFB347)],
+                                        colors: [
+                                          Color(0xFFFFC966),
+                                          Color(0xFFFFB347),
+                                        ],
                                       ),
                                       delay: 0,
                                     ),
@@ -298,7 +316,10 @@ class _DashboardScreenState extends State<DashboardScreen> with TickerProviderSt
                                       value: "248",
                                       subtitle: "Active now",
                                       gradient: const LinearGradient(
-                                        colors: [Color(0xFFFFB347), Color(0xFFFF9933)],
+                                        colors: [
+                                          Color(0xFFFFB347),
+                                          Color(0xFFFF9933),
+                                        ],
                                       ),
                                       delay: 100,
                                     ),
@@ -315,7 +336,10 @@ class _DashboardScreenState extends State<DashboardScreen> with TickerProviderSt
                                       value: "47",
                                       subtitle: "Unread",
                                       gradient: const LinearGradient(
-                                        colors: [Color(0xFFFF9933), Color(0xFFFF8C42)],
+                                        colors: [
+                                          Color(0xFFFF9933),
+                                          Color(0xFFFF8C42),
+                                        ],
                                       ),
                                       delay: 200,
                                     ),
@@ -328,7 +352,10 @@ class _DashboardScreenState extends State<DashboardScreen> with TickerProviderSt
                                       value: "89%",
                                       subtitle: "+12% growth",
                                       gradient: const LinearGradient(
-                                        colors: [Color(0xFFFF8C42), Color(0xFFE8763E)],
+                                        colors: [
+                                          Color(0xFFFF8C42),
+                                          Color(0xFFE8763E),
+                                        ],
                                       ),
                                       delay: 300,
                                     ),
@@ -354,12 +381,17 @@ class _DashboardScreenState extends State<DashboardScreen> with TickerProviderSt
                                   padding: const EdgeInsets.all(8),
                                   decoration: BoxDecoration(
                                     gradient: const LinearGradient(
-                                      colors: [Color(0xFFFFC966), Color(0xFFFFB347)],
+                                      colors: [
+                                        Color(0xFFFFC966),
+                                        Color(0xFFFFB347),
+                                      ],
                                     ),
                                     borderRadius: BorderRadius.circular(10),
                                     boxShadow: [
                                       BoxShadow(
-                                        color: const Color(0xFFFFB347).withOpacity(0.4),
+                                        color: const Color(
+                                          0xFFFFB347,
+                                        ).withOpacity(0.4),
                                         blurRadius: 8,
                                         offset: const Offset(0, 3),
                                       ),
@@ -390,9 +422,7 @@ class _DashboardScreenState extends State<DashboardScreen> with TickerProviderSt
                               ),
                               child: const Text(
                                 "View All",
-                                style: TextStyle(
-                                  fontWeight: FontWeight.w600,
-                                ),
+                                style: TextStyle(fontWeight: FontWeight.w600),
                               ),
                             ),
                           ],
@@ -410,9 +440,13 @@ class _DashboardScreenState extends State<DashboardScreen> with TickerProviderSt
                           itemCount: 3,
                           itemBuilder: (context, index) {
                             return Padding(
-                              padding: EdgeInsets.only(right: index < 2 ? 16 : 0),
+                              padding: EdgeInsets.only(
+                                right: index < 2 ? 16 : 0,
+                              ),
                               child: TweenAnimationBuilder(
-                                duration: Duration(milliseconds: 400 + (index * 100)),
+                                duration: Duration(
+                                  milliseconds: 400 + (index * 100),
+                                ),
                                 tween: Tween<double>(begin: 0, end: 1),
                                 builder: (context, double value, child) {
                                   return Transform.scale(
@@ -443,12 +477,17 @@ class _DashboardScreenState extends State<DashboardScreen> with TickerProviderSt
                               padding: const EdgeInsets.all(8),
                               decoration: BoxDecoration(
                                 gradient: const LinearGradient(
-                                  colors: [Color(0xFFFF9933), Color(0xFFFF8C42)],
+                                  colors: [
+                                    Color(0xFFFF9933),
+                                    Color(0xFFFF8C42),
+                                  ],
                                 ),
                                 borderRadius: BorderRadius.circular(10),
                                 boxShadow: [
                                   BoxShadow(
-                                    color: const Color(0xFFFF9933).withOpacity(0.4),
+                                    color: const Color(
+                                      0xFFFF9933,
+                                    ).withOpacity(0.4),
                                     blurRadius: 8,
                                     offset: const Offset(0, 3),
                                   ),
@@ -490,7 +529,8 @@ class _DashboardScreenState extends State<DashboardScreen> with TickerProviderSt
                             },
                             child: const PostCard(
                               author: "Jane Doe",
-                              content: "Just released a new package for creating beautiful charts in Flutter! Check it out.",
+                              content:
+                                  "Just released a new package for creating beautiful charts in Flutter! Check it out.",
                               timeAgo: "2 hours ago",
                             ),
                           ),
@@ -506,7 +546,8 @@ class _DashboardScreenState extends State<DashboardScreen> with TickerProviderSt
                             },
                             child: const PostCard(
                               author: "John Smith",
-                              content: "Having trouble with nested Navigators. Can anyone share some best practices?",
+                              content:
+                                  "Having trouble with nested Navigators. Can anyone share some best practices?",
                               timeAgo: "5 hours ago",
                             ),
                           ),
@@ -522,7 +563,8 @@ class _DashboardScreenState extends State<DashboardScreen> with TickerProviderSt
                             },
                             child: const PostCard(
                               author: "Sarah Johnson",
-                              content: "Excited to announce our Flutter workshop next week! Limited seats available.",
+                              content:
+                                  "Excited to announce our Flutter workshop next week! Limited seats available.",
                               timeAgo: "8 hours ago",
                             ),
                           ),
@@ -562,7 +604,8 @@ class _StatCard extends StatefulWidget {
   State<_StatCard> createState() => _StatCardState();
 }
 
-class _StatCardState extends State<_StatCard> with SingleTickerProviderStateMixin {
+class _StatCardState extends State<_StatCard>
+    with SingleTickerProviderStateMixin {
   late AnimationController _controller;
   bool _isPressed = false;
 
@@ -590,10 +633,7 @@ class _StatCardState extends State<_StatCard> with SingleTickerProviderStateMixi
       builder: (context, double value, child) {
         return Transform.scale(
           scale: value,
-          child: Opacity(
-            opacity: value,
-            child: child,
-          ),
+          child: Opacity(opacity: value, child: child),
         );
       },
       child: GestureDetector(
@@ -689,20 +729,14 @@ class _DecorativeCircle extends StatelessWidget {
   final double size;
   final Color color;
 
-  const _DecorativeCircle({
-    required this.size,
-    required this.color,
-  });
+  const _DecorativeCircle({required this.size, required this.color});
 
   @override
   Widget build(BuildContext context) {
     return Container(
       width: size,
       height: size,
-      decoration: BoxDecoration(
-        color: color,
-        shape: BoxShape.circle,
-      ),
+      decoration: BoxDecoration(color: color, shape: BoxShape.circle),
     );
   }
 }
@@ -717,7 +751,8 @@ class _AnimatedCircle extends StatefulWidget {
   State<_AnimatedCircle> createState() => _AnimatedCircleState();
 }
 
-class _AnimatedCircleState extends State<_AnimatedCircle> with SingleTickerProviderStateMixin {
+class _AnimatedCircleState extends State<_AnimatedCircle>
+    with SingleTickerProviderStateMixin {
   late AnimationController _controller;
 
   @override

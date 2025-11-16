@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:gitraj/screens/dashboard/admin_dashboard.dart';
 import 'package:provider/provider.dart';
 import '../services/auth_service.dart';
 import 'dashboard/main_navigator.dart';
@@ -19,12 +20,23 @@ class _LoginScreenState extends State<LoginScreen> {
   Future<void> _login() async {
     setState(() => _isLoading = true);
     final authService = Provider.of<AuthService>(context, listen: false);
+
     try {
       await authService.login(
         _emailController.text.trim(),
         _passwordController.text.trim(),
       );
-      if (mounted) {
+
+      if (!mounted) return;
+
+      // ⭐ CHECK USER TYPE AND REDIRECT ⭐
+      if (authService.currentUser!.isAdmin == true) {
+        // Admin → Admin Dashboard
+        Navigator.of(context).pushReplacement(
+          MaterialPageRoute(builder: (_) => const MainNavigator()),
+        );
+      } else {
+        // Normal user → MainNavigator
         Navigator.of(context).pushReplacement(
           MaterialPageRoute(builder: (_) => const MainNavigator()),
         );
@@ -144,10 +156,7 @@ class _LoginScreenState extends State<LoginScreen> {
             ),
           ),
           // Diagonal lines
-          CustomPaint(
-            size: screenSize,
-            painter: DiagonalLinesPainter(),
-          ),
+          CustomPaint(size: screenSize, painter: DiagonalLinesPainter()),
           // Main content
           SafeArea(
             child: Center(
@@ -163,10 +172,7 @@ class _LoginScreenState extends State<LoginScreen> {
                         gradient: const LinearGradient(
                           begin: Alignment.topCenter,
                           end: Alignment.bottomCenter,
-                          colors: [
-                            Color(0xFFFFC966),
-                            Color(0xFFFFB347),
-                          ],
+                          colors: [Color(0xFFFFC966), Color(0xFFFFB347)],
                         ),
                         borderRadius: BorderRadius.circular(40),
                         boxShadow: [
@@ -179,7 +185,10 @@ class _LoginScreenState extends State<LoginScreen> {
                         ],
                       ),
                       child: Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 36, vertical: 40),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 36,
+                          vertical: 40,
+                        ),
                         child: Column(
                           children: [
                             // Avatar circle with icon
@@ -317,31 +326,39 @@ class _LoginScreenState extends State<LoginScreen> {
                               height: 58,
                               child: _isLoading
                                   ? const Center(
-                                child: CircularProgressIndicator(
-                                  color: Colors.white,
-                                  strokeWidth: 3,
-                                ),
-                              )
+                                      child: CircularProgressIndicator(
+                                        color: Colors.white,
+                                        strokeWidth: 3,
+                                      ),
+                                    )
                                   : ElevatedButton(
-                                onPressed: _login,
-                                style: ElevatedButton.styleFrom(
-                                  backgroundColor: const Color(0xFFE8763E),
-                                  foregroundColor: const Color(0xFF4A2511),
-                                  elevation: 8,
-                                  shadowColor: const Color(0xFFD35400).withOpacity(0.5),
-                                  shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(15),
-                                  ),
-                                ),
-                                child: const Text(
-                                  "Log in",
-                                  style: TextStyle(
-                                    fontSize: 19,
-                                    fontWeight: FontWeight.w800,
-                                    letterSpacing: 0.8,
-                                  ),
-                                ),
-                              ),
+                                      onPressed: _login,
+                                      style: ElevatedButton.styleFrom(
+                                        backgroundColor: const Color(
+                                          0xFFE8763E,
+                                        ),
+                                        foregroundColor: const Color(
+                                          0xFF4A2511,
+                                        ),
+                                        elevation: 8,
+                                        shadowColor: const Color(
+                                          0xFFD35400,
+                                        ).withOpacity(0.5),
+                                        shape: RoundedRectangleBorder(
+                                          borderRadius: BorderRadius.circular(
+                                            15,
+                                          ),
+                                        ),
+                                      ),
+                                      child: const Text(
+                                        "Log in",
+                                        style: TextStyle(
+                                          fontSize: 19,
+                                          fontWeight: FontWeight.w800,
+                                          letterSpacing: 0.8,
+                                        ),
+                                      ),
+                                    ),
                             ),
                           ],
                         ),
