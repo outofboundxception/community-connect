@@ -2,7 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'screens/splash_screen.dart';
 import 'services/auth_service.dart';
-import 'services/event_service.dart';
+import 'services/event_service.dart'; // 1. Make sure this is imported
+import 'utils/app_theme.dart';
 
 void main() {
   runApp(const FlutterConnectApp());

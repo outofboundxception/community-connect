@@ -1,26 +1,68 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import '../../services/event_service.dart';
+import '../../services/event_service.dart'; // optional: used if present
 import 'package:intl/intl.dart';
 
 class AddEditEventScreen extends StatefulWidget {
-  const AddEditEventScreen({super.key});
+  /// If [eventData] is provided, the screen works in *edit* mode.
+  /// eventData should contain keys: "title", "description", "date" (date string).
+  final Map<String, String>? eventData;
+
+  const AddEditEventScreen({super.key, this.eventData});
 
   @override
   State<AddEditEventScreen> createState() => _AddEditEventScreenState();
 }
 
-class _AddEditEventScreenState extends State<AddEditEventScreen> {
+class _AddEditEventScreenState extends State<AddEditEventScreen>
+    with SingleTickerProviderStateMixin {
   final _formKey = GlobalKey<FormState>();
   final _titleController = TextEditingController();
   final _descriptionController = TextEditingController();
   DateTime? _selectedDate;
   bool _isLoading = false;
+  late final AnimationController _animationController;
+  final TextEditingController _normalFundController = TextEditingController();
+  final TextEditingController _vipFundController = TextEditingController();
+
+  bool get isEditMode => widget.eventData != null;
+
+  @override
+  void initState() {
+    super.initState();
+
+    // Prefill if editing
+    if (isEditMode) {
+      final data = widget.eventData!;
+      _titleController.text = data['title'] ?? '';
+      _descriptionController.text = data['description'] ?? '';
+      _normalFundController.text = widget.eventData?['normalFund'] ?? '0';
+      _vipFundController.text = widget.eventData?['vipFund'] ?? '0';
+
+      if (data['date'] != null && (data['date']!).isNotEmpty) {
+        try {
+          // Try parsing an ISO or human readable date; assume yyyy-MM-dd or fallback to parse
+          _selectedDate =
+              DateTime.tryParse(data['date']!) ??
+              DateFormat.yMMMMd().parseLoose(data['date']!);
+        } catch (_) {
+          _selectedDate = null;
+        }
+      }
+    }
+
+    _animationController = AnimationController(
+      duration: const Duration(milliseconds: 800),
+      vsync: this,
+    );
+    _animationController.forward();
+  }
 
   @override
   void dispose() {
     _titleController.dispose();
     _descriptionController.dispose();
+    _animationController.dispose();
     super.dispose();
   }
 
@@ -28,10 +70,25 @@ class _AddEditEventScreenState extends State<AddEditEventScreen> {
     final now = DateTime.now();
     final pickedDate = await showDatePicker(
       context: context,
-      initialDate: now,
-      firstDate: now,
-      lastDate: DateTime(now.year + 1),
+      initialDate: _selectedDate ?? now,
+      firstDate: now.subtract(const Duration(days: 365)),
+      lastDate: DateTime(now.year + 5),
+      builder: (context, child) {
+        return Theme(
+          data: Theme.of(context).copyWith(
+            colorScheme: const ColorScheme.light(
+              primary: Color(0xFFFF8C42),
+              onPrimary: Colors.white,
+              surface: Colors.white,
+              onSurface: Color(0xFF5D4037),
+            ),
+            dialogBackgroundColor: Colors.white,
+          ),
+          child: child!,
+        );
+      },
     );
+
     if (pickedDate != null) {
       setState(() {
         _selectedDate = pickedDate;
@@ -40,98 +97,722 @@ class _AddEditEventScreenState extends State<AddEditEventScreen> {
   }
 
   Future<void> _saveEvent() async {
-    // Validate the form fields.
-    if (_formKey.currentState?.validate() ?? false) {
-      if (_selectedDate == null) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Please select a date for the event.')),
-        );
-        return;
-      }
+    if (!(_formKey.currentState?.validate() ?? false)) return;
 
-      setState(() => _isLoading = true);
-
-      try {
-        // Use the EventService to add the new event.
-        await Provider.of<EventService>(context, listen: false).addEvent(
-          _titleController.text,
-          _descriptionController.text,
-          _selectedDate!,
-        );
-
-        if (mounted) {
-          Navigator.of(context).pop(); // Go back to the events list screen.
-        }
-      } catch (e) {
-        // Handle potential errors.
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text('Failed to add event: $e')));
-      } finally {
-        if (mounted) {
-          setState(() => _isLoading = false);
-        }
-      }
+    if (_selectedDate == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: const Row(
+            children: [
+              Icon(Icons.error_outline, color: Colors.white),
+              SizedBox(width: 12),
+              Expanded(
+                child: Text(
+                  'Please select a date for the event.',
+                  style: TextStyle(fontWeight: FontWeight.w600),
+                ),
+              ),
+            ],
+          ),
+          backgroundColor: const Color(0xFFE8763E),
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
+        ),
+      );
+      return;
     }
+
+    final Map<String, String> result = {
+      'title': _titleController.text.trim(),
+      'description': _descriptionController.text.trim(),
+      'normalFund': _normalFundController.text.trim(),
+      'vipFund': _vipFundController.text.trim(),
+
+      // store date in ISO string so parsing is reliable on edit
+      'date': _selectedDate!.toIso8601String(),
+    };
+
+    setState(() => _isLoading = true);
+
+    try {
+      // If EventService is provided, attempt to call methods (optional).
+      final eventService = Provider.of<EventService?>(context, listen: false);
+      if (eventService != null) {
+        if (isEditMode) {
+          // If you have an update method that accepts a map or fields, call it.
+          // This is optional and depends on your EventService implementation.
+          await eventService.updateEvent(
+            widget.eventData!['id']!, // event ID
+            _titleController.text.trim(), // title
+            _descriptionController.text.trim(), // description
+            _selectedDate!, // DateTime
+          );
+        } else {
+          await eventService.addEvent(
+            result['title']!,
+            result['description']!,
+            _selectedDate!,
+          );
+        }
+      }
+
+      if (!mounted) return;
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Row(
+            children: [
+              Icon(
+                isEditMode ? Icons.check_circle : Icons.check_circle,
+                color: Colors.white,
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Text(
+                  isEditMode
+                      ? 'Event updated successfully!'
+                      : 'Event created successfully!',
+                  style: const TextStyle(fontWeight: FontWeight.w600),
+                ),
+              ),
+            ],
+          ),
+          backgroundColor: const Color(0xFF4CAF50),
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
+        ),
+      );
+
+      // Return the created/updated event map to the previous screen.
+      Navigator.of(context).pop(result);
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Row(
+            children: [
+              const Icon(Icons.error_outline, color: Colors.white),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Text(
+                  'Failed to ${isEditMode ? 'update' : 'create'} event: $e',
+                  style: const TextStyle(fontWeight: FontWeight.w600),
+                ),
+              ),
+            ],
+          ),
+          backgroundColor: const Color(0xFFE57373),
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
+        ),
+      );
+    } finally {
+      if (mounted) setState(() => _isLoading = false);
+    }
+  }
+
+  String _displayDate() {
+    if (_selectedDate == null) return 'Select Date';
+    return DateFormat.yMMMMd().format(_selectedDate!);
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text("Create New Event"),
-        actions: [
-          IconButton(icon: const Icon(Icons.save), onPressed: _saveEvent),
-        ],
-      ),
-      body: _isLoading
-          ? const Center(child: CircularProgressIndicator())
-          : Padding(
-              padding: const EdgeInsets.all(16.0),
-              child: Form(
-                key: _formKey,
-                child: ListView(
-                  children: [
-                    TextFormField(
-                      controller: _titleController,
-                      decoration: const InputDecoration(
-                        labelText: 'Event Title',
-                      ),
-                      validator: (value) => (value?.isEmpty ?? true)
-                          ? 'Please enter a title.'
-                          : null,
-                    ),
-                    const SizedBox(height: 16),
-                    TextFormField(
-                      controller: _descriptionController,
-                      decoration: const InputDecoration(
-                        labelText: 'Description',
-                      ),
-                      maxLines: 5,
-                      validator: (value) => (value?.isEmpty ?? true)
-                          ? 'Please enter a description.'
-                          : null,
-                    ),
-                    const SizedBox(height: 24),
-                    Row(
-                      children: [
-                        Expanded(
-                          child: Text(
-                            _selectedDate == null
-                                ? 'No Date Chosen'
-                                : 'Picked Date: ${DateFormat.yMd().format(_selectedDate!)}',
-                          ),
-                        ),
-                        TextButton(
-                          onPressed: _presentDatePicker,
-                          child: const Text('Choose Date'),
-                        ),
-                      ],
-                    ),
-                  ],
+      body: Container(
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [
+              const Color(0xFFFFF4E6).withOpacity(0.5),
+              const Color(0xFFFFF8E1).withOpacity(0.3),
+              const Color(0xFFF8F9FA),
+            ],
+          ),
+        ),
+        child: Stack(
+          children: [
+            // Background decorative circles
+            Positioned(
+              top: -80,
+              right: -80,
+              child: Container(
+                width: 200,
+                height: 200,
+                decoration: BoxDecoration(
+                  color: const Color(0xFFFFE8CC).withOpacity(0.4),
+                  shape: BoxShape.circle,
                 ),
               ),
             ),
+            Positioned(
+              top: 120,
+              left: -60,
+              child: Container(
+                width: 150,
+                height: 150,
+                decoration: BoxDecoration(
+                  color: const Color(0xFFFFF4E6).withOpacity(0.5),
+                  shape: BoxShape.circle,
+                ),
+              ),
+            ),
+            Positioned(
+              bottom: -50,
+              right: -40,
+              child: Container(
+                width: 180,
+                height: 180,
+                decoration: BoxDecoration(
+                  color: const Color(0xFFFFD699).withOpacity(0.3),
+                  shape: BoxShape.circle,
+                ),
+              ),
+            ),
+            // Main content
+            SafeArea(
+              child: Column(
+                children: [
+                  // Custom AppBar
+                  FadeTransition(
+                    opacity: _animationController,
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 20,
+                        vertical: 16,
+                      ),
+                      child: Row(
+                        children: [
+                          Container(
+                            decoration: BoxDecoration(
+                              gradient: const LinearGradient(
+                                colors: [Color(0xFFFFC966), Color(0xFFFFB347)],
+                              ),
+                              shape: BoxShape.circle,
+                              boxShadow: [
+                                BoxShadow(
+                                  color: const Color(
+                                    0xFFFFB347,
+                                  ).withOpacity(0.3),
+                                  blurRadius: 8,
+                                  offset: const Offset(0, 3),
+                                ),
+                              ],
+                            ),
+                            child: IconButton(
+                              icon: const Icon(Icons.arrow_back_rounded),
+                              color: const Color(0xFF5D4037),
+                              onPressed: () => Navigator.of(context).pop(),
+                            ),
+                          ),
+                          const SizedBox(width: 16),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  isEditMode ? 'Edit Event' : 'Create New',
+                                  style: const TextStyle(
+                                    color: Color(0xFF5D4037),
+                                    fontSize: 14,
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                ),
+                                Text(
+                                  isEditMode ? 'Update Event' : 'Event',
+                                  style: const TextStyle(
+                                    color: Color(0xFF4A2511),
+                                    fontSize: 24,
+                                    fontWeight: FontWeight.bold,
+                                    letterSpacing: -0.5,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                  // Form content
+                  Expanded(
+                    child: _isLoading
+                        ? Center(
+                            child: Container(
+                              padding: const EdgeInsets.all(20),
+                              decoration: BoxDecoration(
+                                gradient: const LinearGradient(
+                                  colors: [
+                                    Color(0xFFFFC966),
+                                    Color(0xFFFFB347),
+                                  ],
+                                ),
+                                shape: BoxShape.circle,
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: const Color(
+                                      0xFFFFB347,
+                                    ).withOpacity(0.4),
+                                    blurRadius: 20,
+                                    offset: const Offset(0, 8),
+                                  ),
+                                ],
+                              ),
+                              child: const CircularProgressIndicator(
+                                color: Colors.white,
+                                strokeWidth: 3,
+                              ),
+                            ),
+                          )
+                        : SlideTransition(
+                            position:
+                                Tween<Offset>(
+                                  begin: const Offset(0, 0.1),
+                                  end: Offset.zero,
+                                ).animate(
+                                  CurvedAnimation(
+                                    parent: _animationController,
+                                    curve: Curves.easeOut,
+                                  ),
+                                ),
+                            child: SingleChildScrollView(
+                              physics: const BouncingScrollPhysics(),
+                              padding: const EdgeInsets.all(24),
+                              child: Form(
+                                key: _formKey,
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    // Event Title Field
+                                    const Text(
+                                      'Event Title',
+                                      style: TextStyle(
+                                        color: Color(0xFF5D4037),
+                                        fontSize: 16,
+                                        fontWeight: FontWeight.bold,
+                                        letterSpacing: 0.3,
+                                      ),
+                                    ),
+                                    const SizedBox(height: 12),
+                                    Container(
+                                      decoration: BoxDecoration(
+                                        color: const Color(0xFFFFF8E1),
+                                        borderRadius: BorderRadius.circular(16),
+                                        border: Border.all(
+                                          color: const Color(0xFFFFE8CC),
+                                          width: 2,
+                                        ),
+                                        boxShadow: [
+                                          BoxShadow(
+                                            color: const Color(
+                                              0xFFFFE8CC,
+                                            ).withOpacity(0.3),
+                                            blurRadius: 8,
+                                            offset: const Offset(0, 3),
+                                          ),
+                                        ],
+                                      ),
+                                      child: TextFormField(
+                                        controller: _titleController,
+                                        style: const TextStyle(
+                                          color: Color(0xFF5D4037),
+                                          fontSize: 16,
+                                          fontWeight: FontWeight.w600,
+                                        ),
+                                        decoration: InputDecoration(
+                                          hintText:
+                                              'e.g., Flutter Workshop 2025',
+                                          hintStyle: TextStyle(
+                                            color: const Color(
+                                              0xFFBCAAA4,
+                                            ).withOpacity(0.6),
+                                          ),
+                                          prefixIcon: Container(
+                                            margin: const EdgeInsets.all(12),
+                                            padding: const EdgeInsets.all(8),
+                                            decoration: BoxDecoration(
+                                              gradient: const LinearGradient(
+                                                colors: [
+                                                  Color(0xFFFFC966),
+                                                  Color(0xFFFFB347),
+                                                ],
+                                              ),
+                                              borderRadius:
+                                                  BorderRadius.circular(10),
+                                            ),
+                                            child: const Icon(
+                                              Icons.title_rounded,
+                                              color: Color(0xFF5D4037),
+                                              size: 20,
+                                            ),
+                                          ),
+                                          border: InputBorder.none,
+                                          contentPadding:
+                                              const EdgeInsets.symmetric(
+                                                horizontal: 20,
+                                                vertical: 18,
+                                              ),
+                                        ),
+                                        validator: (value) =>
+                                            (value?.isEmpty ?? true)
+                                            ? 'Please enter a title.'
+                                            : null,
+                                      ),
+                                    ),
+                                    const SizedBox(height: 24),
+
+                                    // Description Field
+                                    const Text(
+                                      'Description',
+                                      style: TextStyle(
+                                        color: Color(0xFF5D4037),
+                                        fontSize: 16,
+                                        fontWeight: FontWeight.bold,
+                                        letterSpacing: 0.3,
+                                      ),
+                                    ),
+                                    const SizedBox(height: 12),
+                                    Container(
+                                      decoration: BoxDecoration(
+                                        color: const Color(0xFFFFF8E1),
+                                        borderRadius: BorderRadius.circular(16),
+                                        border: Border.all(
+                                          color: const Color(0xFFFFE8CC),
+                                          width: 2,
+                                        ),
+                                        boxShadow: [
+                                          BoxShadow(
+                                            color: const Color(
+                                              0xFFFFE8CC,
+                                            ).withOpacity(0.3),
+                                            blurRadius: 8,
+                                            offset: const Offset(0, 3),
+                                          ),
+                                        ],
+                                      ),
+                                      child: TextFormField(
+                                        controller: _descriptionController,
+                                        maxLines: 6,
+                                        style: const TextStyle(
+                                          color: Color(0xFF5D4037),
+                                          fontSize: 15,
+                                          height: 1.5,
+                                        ),
+                                        decoration: InputDecoration(
+                                          hintText:
+                                              'Tell us about your event...',
+                                          hintStyle: TextStyle(
+                                            color: const Color(
+                                              0xFFBCAAA4,
+                                            ).withOpacity(0.6),
+                                          ),
+                                          border: InputBorder.none,
+                                          contentPadding: const EdgeInsets.all(
+                                            20,
+                                          ),
+                                        ),
+                                        validator: (value) =>
+                                            (value?.isEmpty ?? true)
+                                            ? 'Please enter a description.'
+                                            : null,
+                                      ),
+                                    ),
+                                    const SizedBox(height: 24),
+
+                                    // Date Picker
+                                    const Text(
+                                      'Event Date',
+                                      style: TextStyle(
+                                        color: Color(0xFF5D4037),
+                                        fontSize: 16,
+                                        fontWeight: FontWeight.bold,
+                                        letterSpacing: 0.3,
+                                      ),
+                                    ),
+                                    const SizedBox(height: 12),
+                                    GestureDetector(
+                                      onTap: _presentDatePicker,
+                                      child: Container(
+                                        padding: const EdgeInsets.all(20),
+                                        decoration: BoxDecoration(
+                                          gradient: LinearGradient(
+                                            colors: _selectedDate == null
+                                                ? [
+                                                    const Color(0xFFFFF8E1),
+                                                    const Color(0xFFFFF8E1),
+                                                  ]
+                                                : [
+                                                    const Color(0xFFFFC966),
+                                                    const Color(0xFFFFB347),
+                                                  ],
+                                          ),
+                                          borderRadius: BorderRadius.circular(
+                                            16,
+                                          ),
+                                          border: Border.all(
+                                            color: _selectedDate == null
+                                                ? const Color(0xFFFFE8CC)
+                                                : Colors.white.withOpacity(0.5),
+                                            width: 2,
+                                          ),
+                                          boxShadow: [
+                                            BoxShadow(
+                                              color:
+                                                  (_selectedDate == null
+                                                          ? const Color(
+                                                              0xFFFFE8CC,
+                                                            )
+                                                          : const Color(
+                                                              0xFFFFB347,
+                                                            ))
+                                                      .withOpacity(0.3),
+                                              blurRadius: 12,
+                                              offset: const Offset(0, 4),
+                                            ),
+                                          ],
+                                        ),
+                                        child: Row(
+                                          children: [
+                                            Container(
+                                              padding: const EdgeInsets.all(10),
+                                              decoration: BoxDecoration(
+                                                color: _selectedDate == null
+                                                    ? const Color(0xFFFFE8CC)
+                                                    : Colors.white.withOpacity(
+                                                        0.3,
+                                                      ),
+                                                borderRadius:
+                                                    BorderRadius.circular(12),
+                                              ),
+                                              child: Icon(
+                                                Icons.calendar_today_rounded,
+                                                color: _selectedDate == null
+                                                    ? const Color(0xFFBCAAA4)
+                                                    : const Color(0xFF5D4037),
+                                                size: 24,
+                                              ),
+                                            ),
+                                            const SizedBox(width: 16),
+                                            Expanded(
+                                              child: Column(
+                                                crossAxisAlignment:
+                                                    CrossAxisAlignment.start,
+                                                children: [
+                                                  Text(
+                                                    _selectedDate == null
+                                                        ? 'Select Date'
+                                                        : 'Selected Date',
+                                                    style: TextStyle(
+                                                      color:
+                                                          _selectedDate == null
+                                                          ? const Color(
+                                                              0xFFBCAAA4,
+                                                            )
+                                                          : const Color(
+                                                              0xFF5D4037,
+                                                            ).withOpacity(0.8),
+                                                      fontSize: 13,
+                                                      fontWeight:
+                                                          FontWeight.w600,
+                                                    ),
+                                                  ),
+                                                  if (_selectedDate !=
+                                                      null) ...[
+                                                    const SizedBox(height: 4),
+                                                    Text(
+                                                      _displayDate(),
+                                                      style: const TextStyle(
+                                                        color: Color(
+                                                          0xFF4A2511,
+                                                        ),
+                                                        fontSize: 17,
+                                                        fontWeight:
+                                                            FontWeight.bold,
+                                                      ),
+                                                    ),
+                                                  ],
+                                                ],
+                                              ),
+                                            ),
+                                            Icon(
+                                              Icons.arrow_forward_ios_rounded,
+                                              color: _selectedDate == null
+                                                  ? const Color(0xFFBCAAA4)
+                                                  : const Color(0xFF5D4037),
+                                              size: 18,
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                    ),
+                                    const SizedBox(height: 40),
+
+                                    // Initial Funds
+                                    // NORMAL FUND
+                                    const Text(
+                                      "Initial Normal Fund",
+                                      style: TextStyle(
+                                        color: Color(0xFF5D4037),
+                                        fontSize: 16,
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    ),
+                                    SizedBox(height: 12),
+                                    TextFormField(
+                                      controller: _normalFundController,
+                                      keyboardType: TextInputType.number,
+                                      decoration: InputDecoration(
+                                        hintText: "Enter initial normal fund",
+                                        filled: true,
+                                        fillColor: Color(0xFFFFF8E1),
+                                        border: OutlineInputBorder(
+                                          borderRadius: BorderRadius.circular(
+                                            14,
+                                          ),
+                                          borderSide: BorderSide(
+                                            color: Color(0xFFFFE8CC),
+                                            width: 2,
+                                          ),
+                                        ),
+                                      ),
+                                      validator: (v) => (v == null || v.isEmpty)
+                                          ? "Required"
+                                          : null,
+                                    ),
+                                    SizedBox(height: 24),
+
+                                    // VIP FUND
+                                    const Text(
+                                      "Initial VIP Fund",
+                                      style: TextStyle(
+                                        color: Color(0xFF5D4037),
+                                        fontSize: 16,
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    ),
+                                    SizedBox(height: 12),
+                                    TextFormField(
+                                      controller: _vipFundController,
+                                      keyboardType: TextInputType.number,
+                                      decoration: InputDecoration(
+                                        hintText: "Enter initial VIP fund",
+                                        filled: true,
+                                        fillColor: Color(0xFFFFF8E1),
+                                        border: OutlineInputBorder(
+                                          borderRadius: BorderRadius.circular(
+                                            14,
+                                          ),
+                                          borderSide: BorderSide(
+                                            color: Color(0xFFFFE8CC),
+                                            width: 2,
+                                          ),
+                                        ),
+                                      ),
+                                      validator: (v) => (v == null || v.isEmpty)
+                                          ? "Required"
+                                          : null,
+                                    ),
+                                    SizedBox(height: 30),
+                                    const SizedBox(height: 24),
+
+                                    // Save Button
+                                    SizedBox(
+                                      width: double.infinity,
+                                      height: 60,
+                                      child: ElevatedButton(
+                                        onPressed: _saveEvent,
+                                        style: ElevatedButton.styleFrom(
+                                          backgroundColor: Colors.transparent,
+                                          shadowColor: Colors.transparent,
+                                          padding: EdgeInsets.zero,
+                                          shape: RoundedRectangleBorder(
+                                            borderRadius: BorderRadius.circular(
+                                              16,
+                                            ),
+                                          ),
+                                        ),
+                                        child: Ink(
+                                          decoration: BoxDecoration(
+                                            gradient: const LinearGradient(
+                                              colors: [
+                                                Color(0xFFFF8C42),
+                                                Color(0xFFE8763E),
+                                              ],
+                                            ),
+                                            borderRadius: BorderRadius.circular(
+                                              16,
+                                            ),
+                                            boxShadow: [
+                                              BoxShadow(
+                                                color: const Color(
+                                                  0xFFFF8C42,
+                                                ).withOpacity(0.5),
+                                                blurRadius: 16,
+                                                offset: const Offset(0, 8),
+                                              ),
+                                            ],
+                                          ),
+                                          child: Container(
+                                            alignment: Alignment.center,
+                                            child: Row(
+                                              mainAxisAlignment:
+                                                  MainAxisAlignment.center,
+                                              children: [
+                                                Container(
+                                                  padding: const EdgeInsets.all(
+                                                    8,
+                                                  ),
+                                                  decoration: BoxDecoration(
+                                                    color: Colors.white
+                                                        .withOpacity(0.25),
+                                                    shape: BoxShape.circle,
+                                                  ),
+                                                  child: Icon(
+                                                    isEditMode
+                                                        ? Icons.save_rounded
+                                                        : Icons.check_rounded,
+                                                    color: Colors.white,
+                                                    size: 20,
+                                                  ),
+                                                ),
+                                                const SizedBox(width: 12),
+                                                Text(
+                                                  isEditMode
+                                                      ? 'Save Changes'
+                                                      : 'Create Event',
+                                                  style: const TextStyle(
+                                                    color: Colors.white,
+                                                    fontSize: 18,
+                                                    fontWeight: FontWeight.bold,
+                                                    letterSpacing: 0.5,
+                                                  ),
+                                                ),
+                                              ],
+                                            ),
+                                          ),
+                                        ),
+                                      ),
+                                    ),
+                                    const SizedBox(height: 20),
+                                  ],
+                                ),
+                              ),
+                            ),
+                          ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 }

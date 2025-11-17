@@ -1,6 +1,4 @@
 // lib/models/user_model.dart
-import 'package:flutter/foundation.dart'; // Import for debugPrint
-
 class User {
   final String _uid; // Private field
   final String fullName;
@@ -28,15 +26,13 @@ class User {
 // Inherits from User, adding specific admin capabilities
 class AdminUser extends User {
   AdminUser({required super.uid, required super.fullName, required super.email})
-      : super(isAdmin: true);
+    : super(isAdmin: true);
 
   void deleteEvent() {
-    // Replaced print with a safer logging method for Flutter environments
-    debugPrint("Admin: Deleting event.");
+    print("Admin: Deleting event.");
   }
 
   void setAutoDeleteTimer() {
-    // Replaced print with a safer logging method for Flutter environments
-    debugPrint("Admin: Setting chat auto-delete timer.");
+    print("Admin: Setting chat auto-delete timer.");
   }
 }

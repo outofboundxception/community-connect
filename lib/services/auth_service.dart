@@ -28,17 +28,19 @@ class AuthService extends IAuthService {
 
   @override
   Future<void> login(String email, String password) async {
-    // TODO: Implement actual login logic with a backend (e.g., Firebase)
     print("Attempting login with $email");
     await Future.delayed(const Duration(seconds: 1));
-    // Mock user for demonstration
+
+    final bool isAdminAccount = email == "admin@flutter.dev";
+
     _currentUser = User(
       uid: "123",
-      fullName: "Alex Thompson",
+      fullName: isAdminAccount ? "Admin User" : "Regular User",
       email: email,
-      isAdmin: true,
+      isAdmin: isAdminAccount,
     );
-    notifyListeners(); // Notify listeners about the change
+
+    notifyListeners();
   }
 
   @override

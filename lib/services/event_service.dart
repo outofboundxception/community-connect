@@ -1,10 +1,8 @@
 import 'package:flutter/foundation.dart';
 import '../models/event_model.dart';
 
-// This service class encapsulates all logic related to event management.
 class EventService with ChangeNotifier {
-  // A private list to hold the events. In a real app, this would
-  // be replaced with calls to a database like Firestore.
+  // Hard-coded mock events
   final List<Event> _events = [
     Event(
       id: "1",
@@ -22,27 +20,55 @@ class EventService with ChangeNotifier {
     ),
   ];
 
-  // A public getter to allow other parts of the app to read the events
-  // without being able to modify the list directly (Encapsulation).
+  // Get copy of list
   List<Event> get events => [..._events];
 
-  // Adds a new event to the list.
+  // Get a specific event by ID
+  Event? getEventById(String id) {
+    try {
+      return _events.firstWhere((e) => e.id == id);
+    } catch (_) {
+      return null;
+    }
+  }
+
+  // Add new event
   Future<void> addEvent(String title, String description, DateTime date) async {
     final newEvent = Event(
-      // Use timestamp for a unique ID in this mock setup.
       id: DateTime.now().millisecondsSinceEpoch.toString(),
       title: title,
       description: description,
       date: date,
-      author: "Admin", // Assuming the admin is the author.
+      author: "Admin",
     );
-    _events.add(newEvent);
 
-    // Notify any widgets listening to this service that the data has changed.
+    _events.add(newEvent);
     notifyListeners();
   }
 
-  // Deletes an event from the list by its ID.
+  // Update existing event
+  Future<void> updateEvent(
+    String id,
+    String title,
+    String description,
+    DateTime date,
+  ) async {
+    final index = _events.indexWhere((e) => e.id == id);
+
+    if (index == -1) return;
+
+    _events[index] = Event(
+      id: id,
+      title: title,
+      description: description,
+      date: date,
+      author: _events[index].author, // keep original author
+    );
+
+    notifyListeners();
+  }
+
+  // Delete event
   Future<void> deleteEvent(String id) async {
     _events.removeWhere((event) => event.id == id);
     notifyListeners();

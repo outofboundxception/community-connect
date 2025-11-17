@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "273299556403",
+    "project_id": "community-connect-d3444",
+    "storage_bucket": "community-connect-d3444.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:273299556403:android:4588d6da7a258f8a7c3b46",
+        "android_client_info": {
+          "package_name": "com.example.gitraj"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBJa3X17nNLsVg_KILyPbQgxEhZx1pk7wI"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

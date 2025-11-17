@@ -51,7 +51,7 @@ class _SplashScreenState extends State<SplashScreen> {
             const Icon(Icons.hub, color: Colors.white, size: 80),
             const SizedBox(height: 20),
             Text(
-              "Flutter Connect",
+              "Community Connect",
               style: Theme.of(
                 context,
               ).textTheme.headlineMedium?.copyWith(color: Colors.white),

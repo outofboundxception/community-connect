@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../models/user_model.dart';
-// Removed: import 'dart:math' as math; (Unused import)
+import 'dart:math' as math;
 
 class MemberProfileScreen extends StatefulWidget {
   final User user;
@@ -73,13 +73,6 @@ class _MemberProfileScreenState extends State<MemberProfileScreen>
     super.dispose();
   }
 
-  // Helper method to resolve potential deprecation warnings for colors
-  Color _withOpacity(Color color, double opacity) {
-    // For general Color instances, .withOpacity is the modern pattern.
-    // We use Color.fromRGBO for clarity when dealing with variable opacity on known colors.
-    return color.withOpacity(opacity);
-  }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -89,9 +82,8 @@ class _MemberProfileScreenState extends State<MemberProfileScreen>
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
             colors: [
-              // Use alpha-prefixed hex codes for constant gradient colors
-              const Color(0x80FFF4E6), // 50% opacity (0.5 * 255 = 127, or 0x80)
-              const Color(0x4DFFF8E1), // 30% opacity (0.3 * 255 = 76, or 0x4D)
+              const Color(0xFFFFF4E6).withOpacity(0.5),
+              const Color(0xFFFFF8E1).withOpacity(0.3),
               const Color(0xFFF8F9FA),
             ],
           ),
@@ -106,8 +98,7 @@ class _MemberProfileScreenState extends State<MemberProfileScreen>
               leading: Padding(
                 padding: const EdgeInsets.all(8.0),
                 child: CircleAvatar(
-                  // Fixed potential MaterialColor.withOpacity deprecation
-                  backgroundColor: _withOpacity(Colors.white, 0.9),
+                  backgroundColor: Colors.white.withOpacity(0.9),
                   child: IconButton(
                     icon: const Icon(Icons.arrow_back_ios_new_rounded,
                         color: Color(0xFF5D4037), size: 20),
@@ -157,12 +148,10 @@ class _MemberProfileScreenState extends State<MemberProfileScreen>
                           padding: const EdgeInsets.symmetric(
                               horizontal: 16, vertical: 8),
                           decoration: BoxDecoration(
-                            // Fixed potential MaterialColor.withOpacity deprecation
-                            color: _withOpacity(Colors.white, 0.25),
+                            color: Colors.white.withOpacity(0.25),
                             borderRadius: BorderRadius.circular(20),
                             border: Border.all(
-                              // Fixed potential MaterialColor.withOpacity deprecation
-                              color: _withOpacity(Colors.white, 0.4),
+                              color: Colors.white.withOpacity(0.4),
                               width: 1.5,
                             ),
                           ),
@@ -176,8 +165,7 @@ class _MemberProfileScreenState extends State<MemberProfileScreen>
                                 widget.user.email,
                                 style: TextStyle(
                                   fontSize: 14,
-                                  // Fixed potential MaterialColor.withOpacity deprecation
-                                  color: _withOpacity(const Color(0xFF5D4037), 0.9),
+                                  color: const Color(0xFF5D4037).withOpacity(0.9),
                                   fontWeight: FontWeight.w600,
                                 ),
                               ),
@@ -263,7 +251,7 @@ class _MemberProfileScreenState extends State<MemberProfileScreen>
                             children: widget.user.interests.isEmpty
                                 ? [
                               Chip(
-                                label: const Text("No interests listed"),
+                                label: Text("No interests listed"),
                                 backgroundColor:
                                 Colors.orange.shade100,
                               )
@@ -287,7 +275,6 @@ class _MemberProfileScreenState extends State<MemberProfileScreen>
           ],
         ),
       ),
-      // FAB can be added here if needed, but the original code did not include it in the build method
     );
   }
 }
